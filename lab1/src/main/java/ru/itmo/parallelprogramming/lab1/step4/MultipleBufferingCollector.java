@@ -1,6 +1,6 @@
 package ru.itmo.parallelprogramming.lab1.step4;
 
-import ru.itmo.parallelprogramming.lab1.domain.MetricsCollector;
+import ru.itmo.parallelprogramming.lab1.domain.AbstractMetricsCollector;
 import ru.itmo.parallelprogramming.lab1.domain.Snapshot;
 
 import java.util.ArrayList;
@@ -8,9 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class MultipleBufferingCollector implements MetricsCollector {
-    private static final int BUCKETS_COUNT = 256;
-    private static final long BUCKET_STEP_MS = 4;
+public class MultipleBufferingCollector extends AbstractMetricsCollector {
     private static final int FIRST = 0;
     private static final int SECOND = 1;
     private static final int NO_WHERE = -1;
@@ -31,20 +29,21 @@ public class MultipleBufferingCollector implements MetricsCollector {
     @Override
     public void record(long value) {
         var buffers = this.buffers.get();
-        while (buffers.inside.getAcquire() == NO_WHERE) {
-            buffers.inside.set(active);
-            if (buffers.inside.get() == active) {
+        int bufferIndex;
+        while (true) {
+            bufferIndex = active;
+            buffers.inside.set(bufferIndex);
+            if (active == bufferIndex) {
                 break;
             }
             buffers.inside.setRelease(NO_WHERE);
         }
 
-        var inside = buffers.inside.get();
-        buffers.buckets[inside][bucket(value)]++;
-        buffers.count[inside]++;
-        buffers.sum[inside] += value;
-        buffers.min[inside] = Math.min(buffers.min[inside], value);
-        buffers.max[inside] = Math.max(buffers.max[inside], value);
+        buffers.buckets[bufferIndex][bucket(value)]++;
+        buffers.count[bufferIndex]++;
+        buffers.sum[bufferIndex] += value;
+        buffers.min[bufferIndex] = Math.min(buffers.min[bufferIndex], value);
+        buffers.max[bufferIndex] = Math.max(buffers.max[bufferIndex], value);
 
         buffers.inside.setRelease(NO_WHERE);
     }
@@ -57,46 +56,30 @@ public class MultipleBufferingCollector implements MetricsCollector {
 
     @Override
     public Snapshot snapshot() {
+        State state;
         synchronized (listLock) {
             var old = active;
             active = 1 - old;
 
-            while (allBuffers.stream().anyMatch(buffers -> buffers.inside.getAcquire() == old)) {
+            while (allBuffers.stream().anyMatch(buffers -> buffers.inside.get() == old)) {
                 Thread.onSpinWait();
             }
 
-            var newState = new State(globalReadOnlyState);
+            state = new State(globalReadOnlyState);
 
             allBuffers.forEach(buffers -> {
-                mergeState(newState, buffers, old);
+                mergeState(state, buffers, old);
                 buffers.reset(old);
             });
-            globalReadOnlyState = newState;
+            globalReadOnlyState = state;
         }
 
-        var state = globalReadOnlyState;
         var bucketsCopy = Arrays.copyOf(state.buckets, state.buckets.length);
         return new Snapshot(
             bucketsCopy, state.count,
             state.sum, state.min, state.max,
             percentile(50, bucketsCopy, state.count), percentile(99, bucketsCopy, state.count)
         );
-    }
-
-    private long percentile(int percentile, long[] buckets, long invocationsCount) {
-        var threshold = invocationsCount * percentile / 100.0;
-        var acc = 0L;
-
-        for (int i = 0; i < buckets.length; i++) {
-            acc += buckets[i];
-            if (acc >= threshold) return i * BUCKET_STEP_MS;
-        }
-
-        return BUCKETS_COUNT * BUCKET_STEP_MS;
-    }
-
-    private static int bucket(long value) {
-        return Math.toIntExact(Math.min(value / BUCKET_STEP_MS, BUCKETS_COUNT - 1));
     }
 
     private static void mergeState(State globalState, ThreadBuffers buffers, final int active) {

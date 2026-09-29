@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="ru.itmo.parallelprogramming.lab1.ConsistencyTestTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-29T00:51:54.794Z" hostname="pa-malkov" time="5.509">
+<testsuite name="ru.itmo.parallelprogramming.lab1.ConsistencyTestTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-29T10:57:34.953Z" hostname="pa-malkov" time="9.447">
   <properties/>
-  <testcase name="synchronizedCollectorHasConsistentSnapshotsAndFinalCount()" classname="ru.itmo.parallelprogramming.lab1.ConsistencyTestTest" time="5.509"/>
+  <testcase name="doubleBufferedCollectorHasConsistentSnapshotsAndFinalCount()" classname="ru.itmo.parallelprogramming.lab1.ConsistencyTestTest" time="9.437"/>
+  <testcase name="simulatesSnapshotsStayConsistent()" classname="ru.itmo.parallelprogramming.lab1.ConsistencyTestTest" time="0.01"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

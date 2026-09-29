@@ -10,6 +10,6 @@ public class TestMultipleBuffering {
         var bench = new Benchmark();
         var values = SeriesGenerator.generateValues();
 
-        bench.measure(collector, values, 16);
+        bench.measure(collector, values, 12);
     }
 }

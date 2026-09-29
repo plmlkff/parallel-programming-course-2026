@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Benchmark {
     private static final int VALUES_INDEX_STEP_PER_THREAD = 1000;
-    private static final int WARMUP_THREADS_COUNT = 1;
     private static final int MEASUREMENT_DURATION_SECONDS = 5;
     private static final int MEASUREMENTS_COUNT = 5;
 
@@ -23,9 +22,9 @@ public class Benchmark {
         );
         System.out.printf(
             "Warming up the collector for %d seconds with %d thread(s)...\n",
-            MEASUREMENT_DURATION_SECONDS, WARMUP_THREADS_COUNT
+            MEASUREMENT_DURATION_SECONDS, threadsCount
         );
-        warmUp(collector, values);
+        warmUp(collector, values, threadsCount);
         System.out.println("Collector warm-up is complete.");
         var results = new double[MEASUREMENTS_COUNT];
 
@@ -48,8 +47,8 @@ public class Benchmark {
         return median;
     }
 
-    private void warmUp(MetricsCollector collector, long[] values) {
-        var mean = run(collector, values, WARMUP_THREADS_COUNT, Duration.ofSeconds(MEASUREMENT_DURATION_SECONDS));
+    private void warmUp(MetricsCollector collector, long[] values, int threadsCount) {
+        var mean = run(collector, values, threadsCount, Duration.ofSeconds(MEASUREMENT_DURATION_SECONDS));
         System.out.printf("Warm up median throughput: %,.2f ops/sec.\n", mean);
         collector.reset();
     }
@@ -78,7 +77,7 @@ public class Benchmark {
                 executors.shutdownNow();
             }
 
-            return (double) sumOperations(perThreadOperationsCount) / TimeUnit.NANOSECONDS.toSeconds(stop - start);
+            return sumOperations(perThreadOperationsCount) / ((stop - start) / 1_000_000_000.0);
         } catch (InterruptedException e) {
             System.err.printf("Основной поток %s прерван во время работы\n", Thread.currentThread().getName());
             throw new IllegalStateException(e);
@@ -95,8 +94,8 @@ public class Benchmark {
         long[] values, AtomicBoolean isFinished
     ) {
         return () -> {
-            readyLatch.countDown();
             startLatch.countDown();
+            readyLatch.countDown();
             try {
                 startLatch.await();
                 int i = threadIndex * VALUES_INDEX_STEP_PER_THREAD;

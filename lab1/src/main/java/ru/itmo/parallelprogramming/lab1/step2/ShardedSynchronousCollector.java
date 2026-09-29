@@ -1,5 +1,6 @@
 package ru.itmo.parallelprogramming.lab1.step2;
 
+import ru.itmo.parallelprogramming.lab1.domain.AbstractMetricsCollector;
 import ru.itmo.parallelprogramming.lab1.domain.MetricsCollector;
 import ru.itmo.parallelprogramming.lab1.domain.Snapshot;
 
@@ -7,9 +8,7 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
 
-public class ShardedSynchronousCollector implements MetricsCollector {
-    private static final int BUCKETS_COUNT = 256;
-    private static final long BUCKET_STEP_MS = 4;
+public class ShardedSynchronousCollector extends AbstractMetricsCollector {
     private static final int SYNCHRONIZATION_SEGMENTS_COUNT = 16;
 
     private long[] buckets = new long[BUCKETS_COUNT];
@@ -56,7 +55,7 @@ public class ShardedSynchronousCollector implements MetricsCollector {
         long current = min.get();
 
         while (value < current) {
-            if (min.compareAndSet(current, value)) {
+            if (min.weakCompareAndSetVolatile(current, value)) {
                 return;
             }
             current = min.get();
@@ -67,7 +66,7 @@ public class ShardedSynchronousCollector implements MetricsCollector {
         long current = max.get();
 
         while (value > current) {
-            if (max.compareAndSet(current, value)) {
+            if (max.weakCompareAndSetVolatile(current, value)) {
                 return;
             }
             current = max.get();
@@ -86,21 +85,5 @@ public class ShardedSynchronousCollector implements MetricsCollector {
         }
 
         return copy;
-    }
-
-    private long percentile(int percentile, long[] buckets, long invocationsCountCopy) {
-        var threshold = invocationsCountCopy * percentile / 100.0;
-        var acc = 0L;
-
-        for (int i = 0; i < buckets.length; i++) {
-            acc += buckets[i];
-            if (acc >= threshold) return i * BUCKET_STEP_MS;
-        }
-
-        return BUCKETS_COUNT * BUCKET_STEP_MS;
-    }
-
-    private int bucket(long value) {
-        return Math.toIntExact(Math.min(value / 4, 255));
     }
 }
