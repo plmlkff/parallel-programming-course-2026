@@ -10,7 +10,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class ConsistencyTest {
-    private static final int WRITERS = 4;
+    private static final int WRITERS = 16;
     private static final int SNAPSHOTS = 10_000;
 
     public static Result run(MetricsCollector collector) throws InterruptedException, ExecutionException {
