@@ -9,6 +9,6 @@ public class TestSharded {
         var bench = new Benchmark();
         var values = SeriesGenerator.generateValues();
 
-        bench.measure(collector, values, 4);
+        bench.measure(collector, values, 12);
     }
 }

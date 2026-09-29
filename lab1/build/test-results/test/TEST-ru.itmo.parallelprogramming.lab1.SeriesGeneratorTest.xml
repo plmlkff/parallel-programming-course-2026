@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="ru.itmo.parallelprogramming.lab1.SeriesGeneratorTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-29T10:57:44.401Z" hostname="pa-malkov" time="0.155">
-  <properties/>
-  <testcase name="usesFixedSeed()" classname="ru.itmo.parallelprogramming.lab1.SeriesGeneratorTest" time="0.082"/>
-  <testcase name="generatesRequiredNumberOfValuesInRequiredRange()" classname="ru.itmo.parallelprogramming.lab1.SeriesGeneratorTest" time="0.037"/>
-  <testcase name="roughlyOneThirdOfValuesBelongsToBucketZero()" classname="ru.itmo.parallelprogramming.lab1.SeriesGeneratorTest" time="0.036"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

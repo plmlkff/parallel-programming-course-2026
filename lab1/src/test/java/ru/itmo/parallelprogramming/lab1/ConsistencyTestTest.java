@@ -6,16 +6,39 @@ import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
+import ru.itmo.parallelprogramming.lab1.domain.MetricsCollector;
+import ru.itmo.parallelprogramming.lab1.step2.ShardedSynchronousCollector;
+import ru.itmo.parallelprogramming.lab1.step3.ThreadLocalSynchronousCollector;
 import ru.itmo.parallelprogramming.lab1.step4.MultipleBufferingCollector;
 
 class ConsistencyTestTest {
     @Test
-    void doubleBufferedCollectorHasConsistentSnapshotsAndFinalCount() throws Exception {
-        var result = ConsistencyTest.run(new MultipleBufferingCollector());
+    void shardedCollectorPreservesFinalCount() throws Exception {
+        checkFinalCount("sharded", new ShardedSynchronousCollector());
+    }
 
-        assertEquals(10_000, result.snapshots());
+    @Test
+    void threadLocalCollectorPreservesFinalCount() throws Exception {
+        checkFinalCount("thread-local", new ThreadLocalSynchronousCollector());
+    }
+
+    @Test
+    void doubleBufferedCollectorHasConsistentSnapshotsAndFinalCount() throws Exception {
+        var result = checkFinalCount("double-buffered", new MultipleBufferingCollector());
+
         assertEquals(0, result.inconsistentSnapshots());
+    }
+
+    private ConsistencyTest.Result checkFinalCount(String name, MetricsCollector collector) throws Exception {
+        var result = ConsistencyTest.run(collector);
+        System.out.printf(
+            "STRESS_RESULT %s: broken=%d/%d (%.2f%%), buckets<count=%d, buckets>count=%d, final_count_delta=%d%n",
+            name, result.inconsistentSnapshots(), result.snapshots(), result.inconsistentPercent(),
+            result.bucketsBelowCount(), result.bucketsAboveCount(), result.finalCount() - result.operations()
+        );
+        assertEquals(10_000, result.snapshots());
         assertEquals(result.operations(), result.finalCount());
+        return result;
     }
 
     @Test
