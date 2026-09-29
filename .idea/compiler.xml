@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel target="25" />
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="parallel-programming-course-2026.lab1" options="--add-exports=java.base/jdk.internal.vm.annotation=ALL-UNNAMED" />
+      <module name="parallel-programming-course-2026.lab1.main" options="--add-exports=java.base/jdk.internal.vm.annotation=ALL-UNNAMED" />
+      <module name="parallel-programming-course-2026.lab1.test" options="--add-exports=java.base/jdk.internal.vm.annotation=ALL-UNNAMED" />
+    </option>
+  </component>
+</project>
